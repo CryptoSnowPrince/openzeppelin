@@ -192,15 +192,11 @@ contract RemillioMaker is Ownable, ReentrancyGuard, ERC721A {
         return (MINT_PRICE * numTokens);
     }
 
-    function mintWithNFT (uint256 numTokens) external nonReentrant {
+    function mintWithNFT () external nonReentrant {
         require(_halt_mint == false, "paused");
         require(totalSupply() < TOTAL_TOKEN_SUPPLY, "ran out - you were slow");
         
-        uint256 totalPrice = _computePrice(numTokens);
-
-        require(msg.value == totalPrice, "incorrect price");  
-
-        _num_minted[msg.sender] += numTokens;
+        _num_minted[msg.sender] += 1;
 
         _safeMint(msg.sender, 1); 
     }
