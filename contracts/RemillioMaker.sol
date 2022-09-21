@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "./ERC721A.sol";
+import "./IERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
@@ -27,13 +28,16 @@ contract RemillioMaker is Ownable, ReentrancyGuard, ERC721A {
     address public FlurkAddress;
     address public RemillioAddress;
 
+    address public Treasury;
+
     mapping(address => uint256) private _num_minted;
 
-    constructor(string memory _hiddenMetadataUri) ERC721A("RemillioMaker", "REM") {
+    constructor(string memory _hiddenMetadataUri, address _treasury) ERC721A("RemillioMaker", "REM") {
         setMiladyAddress(0x5Af0D9827E0c53E4799BB226655A1de152A425a5);
         setFlurkAddress(0xDe6B6090D32eB3eeae95453eD14358819Ea30d33);
         setRemillioAddress(0xD3D9ddd0CF0A5F0BFB8f7fcEAe075DF687eAEBaB);
         setHiddenMetadataUri(_hiddenMetadataUri);
+        setTreasury(_treasury);
     }
 
     
@@ -192,9 +196,18 @@ contract RemillioMaker is Ownable, ReentrancyGuard, ERC721A {
         return (MINT_PRICE * numTokens);
     }
 
-    function mintWithNFT () external nonReentrant {
+    function setTreasury(address _newAddress) public onlyOwner {
+        Treasury = _newAddress;
+    }
+
+    function mintWithNFT (address inNFT, uint256 tokenID1, uint256 tokenID2) external nonReentrant {
         require(_halt_mint == false, "paused");
         require(totalSupply() < TOTAL_TOKEN_SUPPLY, "ran out - you were slow");
+
+        require(inNFT == MiladyAddress || inNFT == FlurkAddress || inNFT == RemillioAddress, "incorrect address");
+
+        IERC721A(inNFT).safeTransferFrom(msg.sender, address(this), tokenID1);
+        IERC721A(inNFT).safeTransferFrom(msg.sender, address(this), tokenID2);
         
         _num_minted[msg.sender] += 1;
 
